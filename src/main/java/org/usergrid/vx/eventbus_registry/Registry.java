@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentMap;
 import java.util.regex.Pattern;
 
 import org.vertx.java.core.Handler;
@@ -33,7 +34,7 @@ public class Registry extends Verticle implements RegistryMBean {
     public static final String EVENTBUS_REGISTRY_GET = "eventbus.registry.get";
     public static final String EVENTBUS_REGISTRY_REGISTER = "eventbus.registry.register";
 
-  Map<String, Long> handlers = new HashMap<String, Long>();
+    private Map<String, Long> handlers;
 
     long expiration_age = DEFAULT_EXPIRATION_AGE;
     long ping_time = DEFAULT_PING_TIME;
@@ -41,6 +42,7 @@ public class Registry extends Verticle implements RegistryMBean {
 
     @Override
     public void start() {
+        handlers = vertx.sharedData().getMap("eventbus.registry");
         log.info("EventBus registry started.");
         maybeRegisterMBean();
 
@@ -125,7 +127,8 @@ public class Registry extends Verticle implements RegistryMBean {
                         Entry<String, Long> entry = it.next();
                         if ((entry.getValue() == null)
                                 || (entry.getValue().longValue() < expired)) {
-                            it.remove();
+                            // vertx's SharedMap instances returns a copy internally, so we must remove by hand
+                            handlers.remove(entry.getKey());
                             vertx.eventBus()
                             .publish(EVENTBUS_REGISTRY_EXPIRED,
                                     entry.getKey());
@@ -149,7 +152,11 @@ public class Registry extends Verticle implements RegistryMBean {
 
     @Override
     public void expireHandler(String address) {
-      vertx.eventBus().publish(EVENTBUS_REGISTRY_EXPIRED, address);
+      Long removed = handlers.remove(address);
+      if ( removed != null ) {
+        log.info(String.format("Explicit expiration for %s was %d", address, removed));
+        vertx.eventBus().publish(EVENTBUS_REGISTRY_EXPIRED, address);
+      }
     }
 
 
