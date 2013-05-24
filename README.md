@@ -1,6 +1,6 @@
 # EventBus Registry
 
-This module keeps track of registered event bus addresses and provides a facilitiy for checking to see if a specific address has been registered as well as query all the registered addresses and getting the results.  It also can also expire addresses after a certain amount of time.
+This module keeps track of registered event bus addresses and provides a facility for checking to see if a specific address has been registered as well as query all the registered addresses and getting the results.  It also can also expire addresses after a certain amount of time.
 
 The latest version of this module can be found in the [edanuff/vertx-mod-eventbus-registry](https://github.com/edanuff/vertx-mod-eventbus-registry). 
 
@@ -20,7 +20,7 @@ Addresses can be registered as often as you want.  Every time an address is regi
 
 Expired addresses can be periodically automatically purged.  This is useful if there are a large number of addresses being registered that are expected to be allowed to expire.  The default is to not sweep.
 
-Addresses can be looked up by exact name, which is going to be the fastest way to determine if an address has been registerd.  Addresses can also be searched by providing a regular expression to match against.  This will search through all registered addresses and return the matches.  Obviously, the execution time of a search will be related to how many addresses have been registerd and that overhead should be taken into consideration.
+Addresses can be looked up by exact name, which is going to be the fastest way to determine if an address has been registered.  Addresses can also be searched by providing a regular expression to match against.  This will search through all registered addresses and return the matches.  Obviously, the execution time of a search will be related to how many addresses have been registered and that overhead should be taken into consideration.
 
 ## Configuration
 
@@ -43,13 +43,13 @@ For example:
 A short description about each field:
 * `expiration` The duration after which a registered address should be expired.  Set to 0 to prevent expiration.  The default value if this configuration isn't provided is 5000.
 * `ping` How often to publish a message to `eventbus.registry.ping` to remind handlers to re-register.  Set to 0 to prevent this message from being sent.  The default value if this configuration isn't provided is 1000.
-* `sweep` How often to clean out the list of registered addresses.  Set to 0 to prevent this from happening.  The default value if this configuration isn't provided is 0, so, by defaut, sweeping won't occur.
+* `sweep` How often to clean out the list of registered addresses.  Set to 0 to prevent this from happening.  The default value if this configuration isn't provided is 0, so, by default, sweeping won't occur.
 
 ## Operations
 
 ### Register
 
-Send a message to `eventbus.registry.register` with the address to register.  This will add the address to the registery.
+Send a message to `eventbus.registry.register` with the address to register.  This will add the address to the registry.
 
 ### Get
 
