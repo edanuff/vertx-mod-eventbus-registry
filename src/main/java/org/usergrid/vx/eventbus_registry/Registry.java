@@ -9,9 +9,13 @@ import java.util.regex.Pattern;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonObject;
+import org.vertx.java.core.logging.Logger;
+import org.vertx.java.core.logging.impl.LoggerFactory;
 import org.vertx.java.platform.Verticle;
 
 public class Registry extends Verticle {
+
+    private static final Logger log = LoggerFactory.getLogger(Registry.class);
 
     public static final long DEFAULT_EXPIRATION_AGE = 5000;
     public static final long DEFAULT_PING_TIME = 1000;
@@ -25,7 +29,7 @@ public class Registry extends Verticle {
 
     @Override
     public void start() {
-        System.out.println("Registry started");
+        log.info("EventBus registry started.");
 
         JsonObject config = container.config();
         expiration_age = config.getLong("expiration", DEFAULT_EXPIRATION_AGE);
@@ -37,8 +41,7 @@ public class Registry extends Verticle {
             @Override
             public void handle(Message<String> message) {
                 handlers.put(message.body(), System.currentTimeMillis());
-                System.out.println("Registered address: "
-                        + message.body());
+                log.info("EventBus registered address: " + message.body());
             }
         });
 
@@ -122,7 +125,7 @@ public class Registry extends Verticle {
 
     @Override
     public void stop() {
-        System.out.println("Registry stopped");
+        log.info("EventBus registry stopped");
 
     }
 }
