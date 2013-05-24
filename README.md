@@ -14,7 +14,9 @@ The module name is `org.usergrid.vx~eventbus-registry~0.1-SNAPSHOT`.
 
 ## Usage
 
-The registry keep a set of addresses and, for each address, the time the address was registered.  An expiration time can be provided which is the duration after which an address should no longer be considered active.
+When using the Vert.x EventBus, it's often useful to be able to quickly determine whether an address has been registered.  The EventBus itself provides no mechanism for this.  To supplement the EventBus, this module implements a registry for EventBus addresses.  
+
+The registry maintains a set of addresses and, for each address, the time the address was registered.  An expiration time can be provided which is the duration after which an address should no longer be considered active.
 
 Addresses can be registered as often as you want.  Every time an address is registered, it's timestamp is set to the current time.  By doing this, you can prevent an address from expiring.  To make this easier, a ping message is published to `eventbus.registry.ping` and your Verticle can subscribe to this address and when it receives the message, re-register the address so that it doesn't expire.
 
