@@ -1,5 +1,7 @@
 package org.usergrid.vx.eventbus_registry;
 
+import java.lang.management.ManagementFactory;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -13,15 +15,25 @@ import org.vertx.java.core.logging.Logger;
 import org.vertx.java.core.logging.impl.LoggerFactory;
 import org.vertx.java.platform.Verticle;
 
-public class Registry extends Verticle {
+import javax.management.InstanceAlreadyExistsException;
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
 
-    private static final Logger log = LoggerFactory.getLogger(Registry.class);
+public class Registry extends Verticle implements RegistryMBean {
+
+  private static final Logger log = LoggerFactory.getLogger(Registry.class);
 
     public static final long DEFAULT_EXPIRATION_AGE = 5000;
     public static final long DEFAULT_PING_TIME = 1000;
     public static final long DEFAULT_SWEEP_TIME = 0;
+    // Our own addresses
+    public static final String EVENTBUS_REGISTRY_EXPIRED = "eventbus.registry.expired";
+    public static final String EVENTBUS_REGISTRY_PING = "eventbus.registry.ping";
+    public static final String EVENTBUS_REGISTRY_SEARCH = "eventbus.registry.search";
+    public static final String EVENTBUS_REGISTRY_GET = "eventbus.registry.get";
+    public static final String EVENTBUS_REGISTRY_REGISTER = "eventbus.registry.register";
 
-    Map<String, Long> handlers = new HashMap<String, Long>();
+  Map<String, Long> handlers = new HashMap<String, Long>();
 
     long expiration_age = DEFAULT_EXPIRATION_AGE;
     long ping_time = DEFAULT_PING_TIME;
@@ -30,13 +42,14 @@ public class Registry extends Verticle {
     @Override
     public void start() {
         log.info("EventBus registry started.");
+        maybeRegisterMBean();
 
         JsonObject config = container.config();
         expiration_age = config.getLong("expiration", DEFAULT_EXPIRATION_AGE);
         ping_time = config.getLong("ping", DEFAULT_PING_TIME);
         sweep_time = config.getLong("sweep", DEFAULT_SWEEP_TIME);
 
-        vertx.eventBus().registerHandler("eventbus.registry.register",
+        vertx.eventBus().registerHandler(EVENTBUS_REGISTRY_REGISTER,
                 new Handler<Message<String>>() {
             @Override
             public void handle(Message<String> message) {
@@ -45,7 +58,7 @@ public class Registry extends Verticle {
             }
         });
 
-        vertx.eventBus().registerHandler("eventbus.registry.get",
+        vertx.eventBus().registerHandler(EVENTBUS_REGISTRY_GET,
                 new Handler<Message<String>>() {
             @Override
             public void handle(Message<String> message) {
@@ -58,7 +71,7 @@ public class Registry extends Verticle {
             }
         });
 
-        vertx.eventBus().registerHandler("eventbus.registry.search",
+        vertx.eventBus().registerHandler(EVENTBUS_REGISTRY_SEARCH,
                 new Handler<Message<String>>() {
             @Override
             public void handle(Message<String> message) {
@@ -93,7 +106,7 @@ public class Registry extends Verticle {
             vertx.setPeriodic(ping_time, new Handler<Long>() {
                 @Override
                 public void handle(Long timerID) {
-                    vertx.eventBus().publish("eventbus.registry.ping",
+                    vertx.eventBus().publish(EVENTBUS_REGISTRY_PING,
                             System.currentTimeMillis());
                 }
             });
@@ -114,7 +127,7 @@ public class Registry extends Verticle {
                                 || (entry.getValue().longValue() < expired)) {
                             it.remove();
                             vertx.eventBus()
-                            .publish("eventbus.registry.expired",
+                            .publish(EVENTBUS_REGISTRY_EXPIRED,
                                     entry.getKey());
                         }
                     }
@@ -127,5 +140,27 @@ public class Registry extends Verticle {
     public void stop() {
         log.info("EventBus registry stopped");
 
+    }
+
+    @Override
+    public Map<String, Long> getHandlers() {
+      return Collections.unmodifiableMap(handlers);
+    }
+
+    @Override
+    public void expireHandler(String address) {
+      vertx.eventBus().publish(EVENTBUS_REGISTRY_EXPIRED, address);
+    }
+
+
+    private void maybeRegisterMBean() {
+      MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+      try {
+        mbs.registerMBean(this, new ObjectName("org.usergrid.vx.eventbus_registry:type=Registry"));
+      } catch(InstanceAlreadyExistsException iaee) {
+        log.info("Registry has already been registered with JMX");
+      } catch(Exception ex) {
+        log.error(ex);
+      }
     }
 }
