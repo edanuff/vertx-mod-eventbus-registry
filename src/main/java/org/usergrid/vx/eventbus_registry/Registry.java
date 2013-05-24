@@ -33,7 +33,7 @@ public class Registry extends Verticle {
 
     public static final long DEFAULT_EXPIRATION_AGE = 5000;
     public static final long DEFAULT_PING_TIME = 1000;
-    public static final long DEFAULT_SWEEP_TIME = 5000;
+    public static final long DEFAULT_SWEEP_TIME = 0;
 
     Map<String, Long> handlers = new HashMap<String, Long>();
 
