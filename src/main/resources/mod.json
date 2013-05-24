@@ -1,0 +1,4 @@
+{
+  "main":"org.usergrid.vx.eventbus_registry.Registry",
+  "deploys":"io.vertx~lang-rhino~1.0.0-SNAPSHOT"
+}
