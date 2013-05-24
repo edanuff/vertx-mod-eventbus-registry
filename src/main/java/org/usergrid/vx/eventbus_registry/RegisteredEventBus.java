@@ -94,7 +94,7 @@ public class RegisteredEventBus implements EventBus {
     @Override
     public EventBus registerHandler(String address,
             @SuppressWarnings("rawtypes") Handler<? extends Message> handler) {
-        eventBus.publish("eventbus.registry.register", address);
+        eventBus.publish(Registry.EVENTBUS_REGISTRY_REGISTER, address);
         return eventBus.registerHandler(address, handler);
     }
 
@@ -102,14 +102,14 @@ public class RegisteredEventBus implements EventBus {
     public EventBus registerHandler(String address,
             @SuppressWarnings("rawtypes") Handler<? extends Message> handler,
             Handler<AsyncResult<Void>> resultHandler) {
-        eventBus.publish("eventbus.registry.register", address);
+        eventBus.publish(Registry.EVENTBUS_REGISTRY_REGISTER, address);
         return eventBus.registerHandler(address, handler, resultHandler);
     }
 
     @Override
     public EventBus registerLocalHandler(String address,
             @SuppressWarnings("rawtypes") Handler<? extends Message> handler) {
-        eventBus.publish("eventbus.registry.register", address);
+        eventBus.publish(Registry.EVENTBUS_REGISTRY_REGISTER, address);
         return eventBus.registerHandler(address, handler);
     }
 
