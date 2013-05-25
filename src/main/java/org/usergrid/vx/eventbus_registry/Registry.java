@@ -61,17 +61,7 @@ public class Registry extends Verticle implements RegistryMBean {
         });
 
         vertx.eventBus().registerHandler(EVENTBUS_REGISTRY_GET,
-                new Handler<Message<String>>() {
-            @Override
-            public void handle(Message<String> message) {
-                Long age = handlers.get(message.body());
-                if ((expiration_age > 0) && (age != null)) {
-                    message.reply(age < (System.currentTimeMillis() - expiration_age));
-                    return;
-                }
-                message.reply(age != null);
-            }
-        });
+                new EventBusRegistryGetHandler(handlers, expiration_age));
 
         vertx.eventBus().registerHandler(EVENTBUS_REGISTRY_SEARCH,
                 new Handler<Message<String>>() {
@@ -142,7 +132,6 @@ public class Registry extends Verticle implements RegistryMBean {
     @Override
     public void stop() {
         log.info("EventBus registry stopped");
-
     }
 
     @Override
@@ -163,9 +152,10 @@ public class Registry extends Verticle implements RegistryMBean {
     private void maybeRegisterMBean() {
       MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
       try {
+        log.debug("Attaching EventBus Registry to JMX");
         mbs.registerMBean(this, new ObjectName("org.usergrid.vx.eventbus_registry:type=Registry"));
       } catch(InstanceAlreadyExistsException iaee) {
-        log.info("Registry has already been registered with JMX");
+        log.info("EventBus Registry has already been registered with JMX. To be expected with multiple instances of Eventbus Registry");
       } catch(Exception ex) {
         log.error(ex);
       }
