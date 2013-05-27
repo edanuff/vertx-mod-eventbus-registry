@@ -54,37 +54,6 @@ public class Registry extends Verticle implements RegistryMBean {
 
         createHandlers();
 
-        // SEARCH handler
-        vertx.eventBus().registerHandler(EVENTBUS_REGISTRY_SEARCH,
-                new Handler<Message<String>>() {
-            @Override
-            public void handle(Message<String> message) {
-                long expired = System.currentTimeMillis()
-                        - expiration_age;
-                Pattern p = Pattern.compile(message.body());
-
-                JsonObject results = new JsonObject();
-
-                Iterator<Entry<String, Long>> it = handlers.entrySet()
-                        .iterator();
-
-                while (it.hasNext()) {
-                    Entry<String, Long> entry = it.next();
-                    if (expiration_age > 0) {
-                        if ((entry.getValue() == null)
-                                || (entry.getValue().longValue() < expired)) {
-                            continue;
-                        }
-                    }
-                    if (p.matcher(entry.getKey()).matches()) {
-                        results.putNumber(entry.getKey(), entry
-                                .getValue().longValue());
-                    }
-                }
-
-                message.reply(results);
-            }
-        });
 
         if (ping_time > 0) {
             vertx.setPeriodic(ping_time, new Handler<Long>() {
@@ -141,14 +110,17 @@ public class Registry extends Verticle implements RegistryMBean {
     }
 
    private void createHandlers() {
-             // REGISTER handler
-        vertx.eventBus().registerHandler(EVENTBUS_REGISTRY_REGISTER,
-                new RegisterHandler(handlers));
+     // REGISTER handler
+     vertx.eventBus().registerHandler(EVENTBUS_REGISTRY_REGISTER,
+             new RegisterHandler(handlers));
 
-        // GET handler
-        vertx.eventBus().registerHandler(EVENTBUS_REGISTRY_GET,
-                new GetHandler(handlers, expiration_age));
+     // GET handler
+     vertx.eventBus().registerHandler(EVENTBUS_REGISTRY_GET,
+             new GetHandler(handlers, expiration_age));
 
+     // SEARCH handler
+     vertx.eventBus().registerHandler(EVENTBUS_REGISTRY_SEARCH,
+             new SearchHandler(handlers, expiration_age));
    }
 
    private void doConfiguration() {
