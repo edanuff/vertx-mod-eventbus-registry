@@ -2,11 +2,9 @@ package org.usergrid.vx.eventbus_registry;
 
 import java.lang.management.ManagementFactory;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentMap;
 import java.util.regex.Pattern;
 
 import org.vertx.java.core.Handler;
@@ -33,6 +31,10 @@ public class Registry extends Verticle implements RegistryMBean {
     public static final String EVENTBUS_REGISTRY_SEARCH = "eventbus.registry.search";
     public static final String EVENTBUS_REGISTRY_GET = "eventbus.registry.get";
     public static final String EVENTBUS_REGISTRY_REGISTER = "eventbus.registry.register";
+    // Config properties
+    public static final String CONFIG_EXPIRATION = "expiration";
+    public static final String CONFIG_PING = "ping";
+    public static final String CONFIG_SWEEP = "sweep";
 
     private Map<String, Long> handlers;
 
@@ -42,27 +44,17 @@ public class Registry extends Verticle implements RegistryMBean {
 
     @Override
     public void start() {
+        log.info("EventBus registry Verticle starting");
+        // acquire (or create) registry map
         handlers = vertx.sharedData().getMap("eventbus.registry");
-        log.info("EventBus registry started.");
+        // setup
         maybeRegisterMBean();
 
-        JsonObject config = container.config();
-        expiration_age = config.getLong("expiration", DEFAULT_EXPIRATION_AGE);
-        ping_time = config.getLong("ping", DEFAULT_PING_TIME);
-        sweep_time = config.getLong("sweep", DEFAULT_SWEEP_TIME);
+        doConfiguration();
 
-        vertx.eventBus().registerHandler(EVENTBUS_REGISTRY_REGISTER,
-                new Handler<Message<String>>() {
-            @Override
-            public void handle(Message<String> message) {
-                handlers.put(message.body(), System.currentTimeMillis());
-                log.info("EventBus registered address: " + message.body());
-            }
-        });
+        createHandlers();
 
-        vertx.eventBus().registerHandler(EVENTBUS_REGISTRY_GET,
-                new EventBusRegistryGetHandler(handlers, expiration_age));
-
+        // SEARCH handler
         vertx.eventBus().registerHandler(EVENTBUS_REGISTRY_SEARCH,
                 new Handler<Message<String>>() {
             @Override
@@ -148,6 +140,26 @@ public class Registry extends Verticle implements RegistryMBean {
       }
     }
 
+   private void createHandlers() {
+             // REGISTER handler
+        vertx.eventBus().registerHandler(EVENTBUS_REGISTRY_REGISTER,
+                new RegisterHandler(handlers));
+
+        // GET handler
+        vertx.eventBus().registerHandler(EVENTBUS_REGISTRY_GET,
+                new GetHandler(handlers, expiration_age));
+
+   }
+
+   private void doConfiguration() {
+     JsonObject config = container.config();
+     expiration_age = config.getLong(CONFIG_EXPIRATION,
+             DEFAULT_EXPIRATION_AGE);
+     ping_time = config.getLong(CONFIG_PING,
+             DEFAULT_PING_TIME);
+     sweep_time = config.getLong(CONFIG_SWEEP,
+             DEFAULT_SWEEP_TIME);
+   }
 
     private void maybeRegisterMBean() {
       MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();

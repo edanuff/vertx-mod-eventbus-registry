@@ -6,16 +6,17 @@ import org.vertx.java.core.eventbus.Message;
 import java.util.Map;
 
 /**
+ * Handles the GET operation for EventBus registry
  * @author zznate
  */
-public class EventBusRegistryGetHandler implements Handler<Message<String>>{
+public class GetHandler implements Handler<Message<String>>{
 
-  private final Long expiration_age;
+  private final long expiration_age;
   private final Map<String, Long> handlers;
 
-  EventBusRegistryGetHandler(Map<String,Long> handlers, long expiration_age) {
+  GetHandler(Map<String, Long> handlers, long expiration_age) {
     this.handlers = handlers;
-    this.expiration_age = Long.valueOf(expiration_age);
+    this.expiration_age = expiration_age;
   }
 
   @Override
@@ -24,10 +25,13 @@ public class EventBusRegistryGetHandler implements Handler<Message<String>>{
   }
 
   boolean doHandler(String message) {
+    // register time
     Long age = handlers.get(message);
     if ((expiration_age > 0) && (age != null)) {
-      return age < (System.currentTimeMillis() - expiration_age);
+      // verify age + expiration age is still greater than now
+      return System.currentTimeMillis() < (age.longValue() + expiration_age);
     }
+    // on no expiration, simpy verify we are registered
     return age != null;
   }
 
