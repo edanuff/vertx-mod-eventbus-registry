@@ -26,7 +26,7 @@ public class GetHandlerTest {
   public void verifyGetHandlerOk() {
     handlers.put("foo.bar",System.currentTimeMillis());
     GetHandler eventBusRegistryGetHandler = new GetHandler(handlers, new Long(5000));
-    assertTrue(eventBusRegistryGetHandler.doHandler("foo.bar"));
+    assertTrue(eventBusRegistryGetHandler.doHandle("foo.bar"));
   }
 
   @Test
@@ -34,6 +34,6 @@ public class GetHandlerTest {
     handlers.put("expire.verify",System.currentTimeMillis());
     GetHandler eventBusRegistryGetHandler = new GetHandler(handlers, new Long(250));
     TimeUnit.MILLISECONDS.sleep(500);
-    assertFalse(eventBusRegistryGetHandler.doHandler("expire.verify"));
+    assertFalse(eventBusRegistryGetHandler.doHandle("expire.verify"));
   }
 }

@@ -11,8 +11,8 @@ import java.util.Map;
  */
 public class GetHandler implements Handler<Message<String>>{
 
-  private final long expiration_age;
-  private final Map<String, Long> handlers;
+  protected final long expiration_age;
+  protected final Map<String, Long> handlers;
 
   GetHandler(Map<String, Long> handlers, long expiration_age) {
     this.handlers = handlers;
@@ -21,12 +21,12 @@ public class GetHandler implements Handler<Message<String>>{
 
   @Override
   public void handle(Message<String> message) {
-    message.reply(doHandler(message.body()));
+    message.reply(doHandle(message.body()));
   }
 
-  boolean doHandler(String message) {
+  boolean doHandle(String address) {
     // register time
-    Long age = handlers.get(message);
+    Long age = handlers.get(address);
     if ((expiration_age > 0) && (age != null)) {
       // verify age + expiration age is still greater than now
       return System.currentTimeMillis() < (age.longValue() + expiration_age);
