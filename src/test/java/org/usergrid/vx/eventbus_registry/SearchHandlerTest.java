@@ -30,7 +30,14 @@ public class SearchHandlerTest {
     SearchHandler searchHandler = new SearchHandler(handlers,
             Registry.DEFAULT_EXPIRATION_AGE*100);
 
+    // find by pattern
     JsonObject jo = searchHandler.doSearch("a*b");
     Assert.assertEquals(2, jo.getFieldNames().size());
+    // all
+    jo = searchHandler.doSearch(".*");
+    Assert.assertEquals(3, jo.getFieldNames().size());
+    // miss
+    jo = searchHandler.doSearch("\\s");
+    Assert.assertEquals(0, jo.getFieldNames().size());
   }
 }
