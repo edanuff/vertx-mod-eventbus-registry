@@ -27,17 +27,8 @@ public class GetHandler implements Handler<Message<String>>{
   boolean doHandle(String address) {
     // register time
     Long age = handlers.get(address);
-    return isExpired(age);
+    return RegistryUtils.isExpired(age, expiration_age);
   }
 
-  // TODO need to move this into a utility class
-  boolean isExpired(Long age) {
-    if ((expiration_age > 0) && (age != null)) {
-      // verify age + expiration age is still greater than now
-      return System.currentTimeMillis() < (age + expiration_age);
-    }
-    // on no expiration, simpy verify we are registered
-    return age != null;
-  }
 
 }

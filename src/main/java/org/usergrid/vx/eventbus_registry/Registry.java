@@ -64,29 +64,9 @@ public class Registry extends Verticle implements RegistryMBean {
                 }
             });
         }
-        // TODO sweepHandler
+        // assign SweepHandler as periodic if we are configured for such
         if ((expiration_age > 0) && (sweep_time > 0)) {
-            vertx.setPeriodic(sweep_time, new Handler<Long>() {
-                @Override
-                public void handle(Long timerID) {
-                    long expired = System.currentTimeMillis() - expiration_age;
-
-                    Iterator<Entry<String, Long>> it = handlers.entrySet()
-                            .iterator();
-
-                    while (it.hasNext()) {
-                        Entry<String, Long> entry = it.next();
-                        if ((entry.getValue() == null)
-                                || (entry.getValue().longValue() < expired)) {
-                            // vertx's SharedMap instances returns a copy internally, so we must remove by hand
-                            handlers.remove(entry.getKey());
-                            vertx.eventBus()
-                            .publish(EVENTBUS_REGISTRY_EXPIRED,
-                                    entry.getKey());
-                        }
-                    }
-                }
-            });
+            vertx.setPeriodic(sweep_time, new SweepHandler(vertx, handlers, expiration_age));
         }
     }
 
