@@ -64,7 +64,7 @@ public class Registry extends Verticle implements RegistryMBean {
                 }
             });
         }
-
+        // TODO sweepHandler
         if ((expiration_age > 0) && (sweep_time > 0)) {
             vertx.setPeriodic(sweep_time, new Handler<Long>() {
                 @Override
