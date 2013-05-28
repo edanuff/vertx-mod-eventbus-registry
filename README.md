@@ -51,7 +51,8 @@ A short description about each field:
 
 ### Register
 
-Send a message to `eventbus.registry.register` with the address to register.  This will add the address to the registry.
+Send a message to `eventbus.registry.register` with the address to register.  This will add the address to the registry. 
+This message will return `true` unless there was an underlying error (very unlikely). If the address existed previously, the timestamp will be updated. 
 
 ### Get
 
